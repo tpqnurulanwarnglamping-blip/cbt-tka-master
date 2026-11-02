@@ -1,0 +1,126 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  STUDENT
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  SUBMITTED
+  TIMED_OUT
+}
+
+enum QuestionType {
+  SINGLE_CHOICE            // Pilihan Ganda: 4 opsi (A-D), 1 benar
+  COMPLEX_MULTIPLE_CHOICE  // Pilihan Ganda Kompleks: 3 opsi centang, 2 benar 1 salah
+  TRUE_FALSE               // Benar / Salah: 3 pernyataan mandiri dengan centang Benar/Salah
+}
+
+model User {
+  id           String        @id @default(cuid())
+  identifier   String        @unique // Email untuk Guru / NISN untuk Murid
+  name         String
+  password     String        // Hashed bcrypt
+  role         Role          @default(STUDENT)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  createdExams Exam[]        @relation("CreatedBy")
+  examSessions ExamSession[]
+
+  @@index([identifier, role])
+}
+
+model Exam {
+  id              String        @id @default(cuid())
+  title           String
+  description     String?
+  code            String        @unique // e.g. TKA-202611-001
+  token           String        @unique // 6 karakter acak kapital e.g. TKA89X
+  durationMinutes Int           // Durasi dalam menit
+  startTime       DateTime
+  endTime         DateTime
+  isActive        Boolean       @default(true)
+  createdById     String
+  createdBy       User          @relation("CreatedBy", fields: [createdById], references: [id])
+  createdAt       DateTime      @default(now())
+
+  questions       Question[]
+  sessions        ExamSession[]
+
+  @@index([token, isActive])
+}
+
+model Question {
+  id            String       @id @default(cuid())
+  examId        String
+  exam          Exam         @relation(fields: [examId], references: [id], onDelete: Cascade)
+  orderNumber   Int
+  type          QuestionType @default(SINGLE_CHOICE)
+  questionText  String       @db.Text
+  questionImage String?
+
+  // Struktur JSON:
+  // - SINGLE_CHOICE: [{ id: "A", text: "..." }, { id: "B", text: "..." }, { id: "C", text: "..." }, { id: "D", text: "..." }]
+  // - COMPLEX_MULTIPLE_CHOICE: [{ id: "opt_1", text: "..." }, { id: "opt_2", text: "..." }, { id: "opt_3", text: "..." }]
+  // - TRUE_FALSE: [{ id: "s1", text: "Pernyataan 1" }, { id: "s2", text: "Pernyataan 2" }, { id: "s3", text: "Pernyataan 3" }]
+  options       Json
+
+  // Kunci Jawaban Server (Server-Only, disembunyikan dari siswa):
+  // - SINGLE_CHOICE: "A"
+  // - COMPLEX_MULTIPLE_CHOICE: ["opt_1", "opt_3"]
+  // - TRUE_FALSE: { "s1": true, "s2": false, "s3": true }
+  correctAnswer Json
+
+  createdAt     DateTime     @default(now())
+  answers       Answer[]
+
+  @@index([examId, orderNumber])
+}
+
+model ExamSession {
+  id           String        @id @default(cuid())
+  examId       String
+  exam         Exam          @relation(fields: [examId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startedAt    DateTime      @default(now())
+  expiresAt    DateTime      // Server Authority: startedAt + durationMinutes
+  submittedAt  DateTime?
+  status       SessionStatus @default(IN_PROGRESS)
+  score        Float         @default(0)
+  totalCorrect Int           @default(0)
+
+  answers      Answer[]
+
+  @@unique([examId, userId])
+  @@index([userId, status])
+}
+
+model Answer {
+  id             String      @id @default(cuid())
+  examSessionId  String
+  examSession    ExamSession @relation(fields: [examSessionId], references: [id], onDelete: Cascade)
+  questionId     String
+  question       Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  // Jawaban Murid:
+  // - SINGLE_CHOICE: "A" (string)
+  // - COMPLEX_MULTIPLE_CHOICE: ["opt_1", "opt_3"] (array string)
+  // - TRUE_FALSE: { "s1": true, "s2": false, "s3": true } (object)
+  selectedAnswer Json?
+
+  isFlagged      Boolean     @default(false)
+  updatedAt      DateTime    @updatedAt
+
+  @@unique([examSessionId, questionId])
+}
