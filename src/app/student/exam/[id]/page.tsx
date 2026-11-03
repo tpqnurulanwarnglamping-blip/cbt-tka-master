@@ -252,21 +252,35 @@ export default function ExamInteractivePage({ params }: ExamInteractivePageProps
                 </label>
               </div>
 
-              {/* Teks Pertanyaan */}
+              {/* 1. STIMULUS / WACANA TEKS (JIKA ADA) */}
+              {currentQ.stimulusText && (
+                <div className="mb-6 p-5 bg-slate-50 border border-slate-200/80 rounded-2xl">
+                  <div className="text-[11px] font-bold text-[#23A68A] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#23A68A]" />
+                    Stimulus / Wacana Bacaan TKA
+                  </div>
+                  <div className="text-xs md:text-sm text-slate-700 leading-relaxed whitespace-pre-line font-normal">
+                    {currentQ.stimulusText}
+                  </div>
+                </div>
+              )}
+
+              {/* 2. GAMBAR PENDUKUNG (JIKA ADA) */}
+              {currentQ.questionImage && (
+                <div className="mb-6 max-w-md mx-auto rounded-2xl overflow-hidden border border-slate-200 bg-white p-2">
+                  <img
+                    src={currentQ.questionImage}
+                    alt="Gambar Soal"
+                    className="w-full h-auto object-contain rounded-xl"
+                  />
+                </div>
+              )}
+
+              {/* 3. PERTANYAAN INTI */}
               <div className="mb-6">
-                <p className="text-slate-800 text-sm md:text-base leading-relaxed font-normal whitespace-pre-line">
+                <p className="text-slate-800 text-sm md:text-base leading-relaxed font-semibold whitespace-pre-line">
                   {currentQ.questionText}
                 </p>
-
-                {currentQ.questionImage && (
-                  <div className="mt-4 max-w-md mx-auto rounded-2xl overflow-hidden border border-slate-200">
-                    <img
-                      src={currentQ.questionImage}
-                      alt="Gambar Soal"
-                      className="w-full h-auto object-contain"
-                    />
-                  </div>
-                )}
               </div>
 
               {/* Komponen Pilihan / Opsi Berdasarkan 3 Tipe Soal */}

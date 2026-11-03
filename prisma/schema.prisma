@@ -31,6 +31,7 @@ model User {
   name         String
   password     String        // Hashed bcrypt
   role         Role          @default(STUDENT)
+  classGrade   String?       // Kelas / Rombel (e.g. XII MIPA 1)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
@@ -66,8 +67,9 @@ model Question {
   exam          Exam         @relation(fields: [examId], references: [id], onDelete: Cascade)
   orderNumber   Int
   type          QuestionType @default(SINGLE_CHOICE)
-  questionText  String       @db.Text
-  questionImage String?
+  stimulusText  String?      @db.Text // Wacana / Stimulus bacaan TKA
+  questionText  String       @db.Text // Pertanyaan inti
+  questionImage String?      // Foto/Diagram pendukung (Base64 atau URL)
 
   // Struktur JSON:
   // - SINGLE_CHOICE: [{ id: "A", text: "..." }, { id: "B", text: "..." }, { id: "C", text: "..." }, { id: "D", text: "..." }]

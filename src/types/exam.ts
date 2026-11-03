@@ -23,6 +23,7 @@ export interface QuestionData {
   id: string;
   orderNumber: number;
   type: QuestionType;
+  stimulusText?: string | null;
   questionText: string;
   questionImage?: string | null;
   options: any; // SingleChoiceOption[] | ComplexOption[] | TrueFalseStatement[]
@@ -32,10 +33,20 @@ export interface ClientQuestionPayload {
   id: string;
   orderNumber: number;
   type: QuestionType;
+  stimulusText?: string | null;
   questionText: string;
   questionImage?: string | null;
   options: any;
   // NOTE: correctAnswer is deliberately omitted for security!
+}
+
+export interface StudentItem {
+  id: string;
+  identifier: string; // NISN
+  name: string;
+  classGrade?: string | null;
+  role: Role;
+  createdAt: string;
 }
 
 export interface ExamDetail {

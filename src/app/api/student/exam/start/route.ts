@@ -24,6 +24,7 @@ export async function POST(request: Request) {
             id: true,
             orderNumber: true,
             type: true,
+            stimulusText: true,
             questionText: true,
             questionImage: true,
             options: true,
