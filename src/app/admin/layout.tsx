@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/navigation';
 import { useRouter, usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, BookOpen, HelpCircle, BarChart3, LogOut, GraduationCap } from 'lucide-react';
+import { LayoutDashboard, Users, BookOpen, PlusCircle, ListChecks, BarChart3, LogOut, GraduationCap } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -19,7 +19,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { label: 'Data Siswa', href: '/admin/students', icon: Users },
     { label: 'Manajemen Ujian', href: '/admin/exams', icon: BookOpen },
-    { label: 'Bank Soal TKA', href: '/admin/questions', icon: HelpCircle },
+    { label: 'Bank Soal (Input)', href: '/admin/questions', icon: PlusCircle },
+    { label: 'Manajemen Soal', href: '/admin/manage-questions', icon: ListChecks },
     { label: 'Laporan Skor', href: '/admin/reports', icon: BarChart3 },
   ];
 

@@ -1,13 +1,24 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { HelpCircle, Plus, Check, FileSpreadsheet, Upload, Image as ImageIcon, X, Download } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, Check, FileSpreadsheet, Upload, Image as ImageIcon, X, Download, ArrowRight, BookOpen } from 'lucide-react';
 import { QuestionType } from '@/types/exam';
 import * as XLSX from 'xlsx';
+
+interface ExamOption {
+  id: string;
+  title: string;
+  code: string;
+  token: string;
+}
 
 export default function QuestionBankPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  // Daftar Sesi Ujian untuk Dropdown
+  const [exams, setExams] = useState<ExamOption[]>([]);
+  const [selectedExamId, setSelectedExamId] = useState<string>('');
 
   const [questionType, setQuestionType] = useState<QuestionType>('SINGLE_CHOICE');
   
@@ -16,7 +27,7 @@ export default function QuestionBankPage() {
   const [questionImage, setQuestionImage] = useState<string | null>(null); // Bagian 2: Gambar Pendukung
   const [questionText, setQuestionText] = useState(''); // Bagian 3: Pertanyaan Inti
   
-  // Bagian 4: Pilihan Jawaban Sesuai Tipe
+  // Bagian 4: Pilihan Jawaban
   // Tipe 1: Pilihan Ganda (4 Opsi A-D, 1 Benar)
   const [singleOptions, setSingleOptions] = useState([
     { id: 'A', text: '' },
@@ -48,6 +59,19 @@ export default function QuestionBankPage() {
 
   const [saving, setSaving] = useState(false);
 
+  // Ambil data sesi ujian saat halaman dibuka
+  useEffect(() => {
+    fetch('/api/admin/exams')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.exams && data.exams.length > 0) {
+          setExams(data.exams);
+          setSelectedExamId(data.exams[0].id); // Otomatis pilih sesi pertama
+        }
+      })
+      .catch((e) => console.log('Error fetching exams', e));
+  }, []);
+
   // 1. Handle Upload Gambar Soal (Convert to Base64)
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -67,6 +91,11 @@ export default function QuestionBankPage() {
   // 2. Simpan Soal Manual
   const handleSaveQuestion = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedExamId) {
+      alert('Pilih Sesi Ujian terlebih dahulu!');
+      return;
+    }
+
     setSaving(true);
 
     let payloadOptions: any;
@@ -88,6 +117,7 @@ export default function QuestionBankPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          examId: selectedExamId,
           type: questionType,
           stimulusText,
           questionImage,
@@ -100,7 +130,7 @@ export default function QuestionBankPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      alert('Butir soal TKA berhasil disimpan ke Bank Soal!');
+      alert('Butir soal TKA berhasil disimpan dan otomatis masuk ke Manajemen Soal!');
       // Reset form
       setStimulusText('');
       setQuestionImage(null);
@@ -161,6 +191,11 @@ export default function QuestionBankPage() {
 
   // 4. Import Soal Massal dari Excel (.xlsx)
   const handleImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectedExamId) {
+      alert('Pilih Sesi Ujian terlebih dahulu sebelum mengimpor file Excel!');
+      return;
+    }
+
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -224,12 +259,12 @@ export default function QuestionBankPage() {
         const res = await fetch('/api/admin/questions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ bulk: true, items: parsedItems }),
+          body: JSON.stringify({ bulk: true, examId: selectedExamId, items: parsedItems }),
         });
 
         const data = await res.json();
         if (res.ok) {
-          alert(`Sukses! ${parsedItems.length} butir soal dari Excel berhasil diimpor ke Bank Soal.`);
+          alert(`Sukses! ${parsedItems.length} butir soal dari Excel berhasil dimasukkan ke sesi ujian terpilih.`);
         } else {
           alert(data.message || 'Gagal mengimpor file Excel.');
         }
@@ -244,14 +279,21 @@ export default function QuestionBankPage() {
     <div className="space-y-8 max-w-4xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Manajemen Bank Soal TKA</h1>
+          <h1 className="text-2xl font-bold text-slate-800">Bank Soal TKA (Input Butir Soal)</h1>
           <p className="text-xs text-slate-500 mt-1">
-            Format baku TKA: Stimulus Wacana $\rightarrow$ Gambar $\rightarrow$ Pertanyaan $\rightarrow$ Pilihan Jawaban.
+            Pilih sesi ujian tujuan, lalu isi stimulus wacana, gambar, dan pertanyaan. Soal akan otomatis terintegrasi ke sesi tersebut.
           </p>
         </div>
 
-        {/* Tombol Import / Download Template Excel */}
+        {/* Tombol Import / Download Template Excel & Link ke Manajemen Soal */}
         <div className="flex items-center gap-2">
+          <a
+            href="/admin/manage-questions"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-full transition"
+          >
+            Buka Manajemen Soal <ArrowRight className="w-3.5 h-3.5" />
+          </a>
+
           <button
             type="button"
             onClick={handleDownloadTemplate}
@@ -281,6 +323,33 @@ export default function QuestionBankPage() {
 
       <form onSubmit={handleSaveQuestion} className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
         
+        {/* PILIH SESI UJIAN TUJUAN (INTEGRASI PENUH) */}
+        <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-2xl">
+          <label className="block text-xs font-bold text-[#176e5c] uppercase tracking-wider mb-2 flex items-center gap-2">
+            <BookOpen className="w-4 h-4 text-[#23A68A]" />
+            Pilih Sesi Ujian Tujuan (Wajib)
+          </label>
+          <select
+            required
+            value={selectedExamId}
+            onChange={(e) => setSelectedExamId(e.target.value)}
+            className="w-full p-3 bg-white border border-emerald-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#23A68A]"
+          >
+            {exams.length === 0 ? (
+              <option value="">Belum ada sesi ujian. Silakan buat sesi ujian di menu Manajemen Ujian.</option>
+            ) : (
+              exams.map((ex) => (
+                <option key={ex.id} value={ex.id}>
+                  {ex.title} ({ex.code} &bull; Token: {ex.token})
+                </option>
+              ))
+            )}
+          </select>
+          <span className="text-[11px] text-emerald-800 font-medium mt-1.5 block">
+            Soal yang Anda buat di bawah ini akan otomatis langsung masuk ke dalam sesi ujian ini.
+          </span>
+        </div>
+
         {/* PILIH TIPE SOAL */}
         <div>
           <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
@@ -526,14 +595,18 @@ export default function QuestionBankPage() {
         </div>
 
         {/* Tombol Simpan */}
-        <div className="pt-4 border-t border-slate-100 flex justify-end">
+        <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+          <span className="text-xs text-slate-400">
+            Setelah disimpan, buka tab <strong>Manajemen Soal</strong> untuk melihat daftar & mengedit soal.
+          </span>
+
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || !selectedExamId}
             className="px-7 py-3 bg-[#23A68A] hover:bg-[#1a8a72] text-white text-xs font-bold rounded-full transition shadow-md hover:shadow-lg flex items-center gap-2 disabled:opacity-50"
           >
             <Plus className="w-4 h-4" />
-            {saving ? 'Menyimpan...' : 'SIMPAN BUTIR SOAL KE BANK SOAL'}
+            {saving ? 'Menyimpan...' : 'SIMPAN SOAL KE SESI INI'}
           </button>
         </div>
 
