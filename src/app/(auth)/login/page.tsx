@@ -174,13 +174,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          {/* Catatan Bantuan Akun Contoh */}
-          <div className="mt-8 pt-4 border-t border-slate-100 text-center">
-            <p className="text-xs text-slate-400">
-              Demo Admin: <code className="text-slate-600 bg-slate-100 px-1 py-0.5 rounded">admin@sekolah.sch.id</code> &bull; Demo Siswa: <code className="text-slate-600 bg-slate-100 px-1 py-0.5 rounded">1234567890</code>
-            </p>
-          </div>
         </div>
 
       </div>

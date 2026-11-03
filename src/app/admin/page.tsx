@@ -1,37 +1,45 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Users, Award, Copy, Check, Plus, ArrowUpRight } from 'lucide-react';
+import { BookOpen, Users, Award, Copy, Check, Plus, Loader2 } from 'lucide-react';
+
+interface ExamItem {
+  id: string;
+  code: string;
+  title: string;
+  token: string;
+  durationMinutes: number;
+  totalQuestions: number;
+  isActive: boolean;
+}
 
 export default function AdminDashboardPage() {
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    activeExams: 3,
-    totalStudents: 128,
-    averageScore: 78.4,
+    activeExams: 0,
+    totalStudents: 0,
+    averageScore: 0,
   });
 
-  const [exams, setExams] = useState([
-    {
-      id: 'ex-1',
-      code: 'TKA-202611-001',
-      title: 'Simulasi TKA - Penalaran Matematika & Literasi',
-      token: 'TKA889',
-      durationMinutes: 90,
-      totalQuestions: 25,
-      isActive: true,
-    },
-    {
-      id: 'ex-2',
-      code: 'TKA-202611-002',
-      title: 'Try Out TKA - Pemahaman Bacaan & Menulis',
-      token: 'TKA92A',
-      durationMinutes: 60,
-      totalQuestions: 20,
-      isActive: true,
-    },
-  ]);
-
+  const [exams, setExams] = useState<ExamItem[]>([]);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/admin/dashboard')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setStats(data.stats);
+          setExams(data.exams);
+        }
+      })
+      .catch((err) => {
+        console.error('Error fetching dashboard stats:', err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
 
   const copyToClipboard = (token: string) => {
     navigator.clipboard.writeText(token);
@@ -46,7 +54,7 @@ export default function AdminDashboardPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Dashboard Guru & Pengawas</h1>
           <p className="text-xs text-slate-500 mt-1">
-            Ringkasan simulasi ujian, token akses aktif, dan analitik nilai peserta TKA.
+            Ringkasan data real-time simulasi ujian, token akses aktif, dan analitik nilai peserta TKA.
           </p>
         </div>
 
@@ -58,7 +66,7 @@ export default function AdminDashboardPage() {
         </a>
       </div>
 
-      {/* Grid 3-Kolom Metrik Dashboard (Standar ZettBOT) */}
+      {/* Grid 3-Kolom Metrik Dashboard (Real Data dari Database) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         
         {/* Kartu 1: Ujian Aktif */}
@@ -68,7 +76,9 @@ export default function AdminDashboardPage() {
           </div>
           <div>
             <span className="text-xs font-medium text-slate-400">Sesi Ujian Aktif</span>
-            <div className="text-2xl font-extrabold text-slate-800 mt-0.5">{stats.activeExams}</div>
+            <div className="text-2xl font-extrabold text-slate-800 mt-0.5">
+              {loading ? '...' : stats.activeExams}
+            </div>
           </div>
         </div>
 
@@ -79,7 +89,9 @@ export default function AdminDashboardPage() {
           </div>
           <div>
             <span className="text-xs font-medium text-slate-400">Total Murid Terdaftar</span>
-            <div className="text-2xl font-extrabold text-slate-800 mt-0.5">{stats.totalStudents}</div>
+            <div className="text-2xl font-extrabold text-slate-800 mt-0.5">
+              {loading ? '...' : stats.totalStudents}
+            </div>
           </div>
         </div>
 
@@ -90,61 +102,76 @@ export default function AdminDashboardPage() {
           </div>
           <div>
             <span className="text-xs font-medium text-slate-400">Rata-Rata Skor TKA</span>
-            <div className="text-2xl font-extrabold text-slate-800 mt-0.5">{stats.averageScore} / 100</div>
+            <div className="text-2xl font-extrabold text-slate-800 mt-0.5">
+              {loading ? '...' : `${stats.averageScore} / 100`}
+            </div>
           </div>
         </div>
 
       </div>
 
-      {/* Tabel Sesi Ujian Aktif & Token */}
+      {/* Tabel Sesi Ujian Aktif & Token Riil */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-          <h2 className="text-sm font-bold text-slate-800">Daftar Ujian & Token Akses Cepat</h2>
+          <h2 className="text-sm font-bold text-slate-800">Daftar Sesi Ujian & Token Akses</h2>
           <span className="text-xs text-slate-400">Klik token untuk menyalin ke clipboard</span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50 text-slate-400 uppercase font-semibold text-[11px] border-b border-slate-100">
-              <tr>
-                <th className="px-6 py-3.5">Kode Ujian</th>
-                <th className="px-6 py-3.5">Judul Sesi</th>
-                <th className="px-6 py-3.5">Durasi</th>
-                <th className="px-6 py-3.5">Jumlah Soal</th>
-                <th className="px-6 py-3.5">Token Ujian</th>
-                <th className="px-6 py-3.5">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-medium">
-              {exams.map((ex) => (
-                <tr key={ex.id} className="hover:bg-slate-50/70 transition">
-                  <td className="px-6 py-4 font-mono font-semibold text-slate-800">{ex.code}</td>
-                  <td className="px-6 py-4 text-slate-800 font-semibold">{ex.title}</td>
-                  <td className="px-6 py-4">{ex.durationMinutes} Menit</td>
-                  <td className="px-6 py-4">{ex.totalQuestions} Soal</td>
-                  <td className="px-6 py-4">
-                    <button
-                      onClick={() => copyToClipboard(ex.token)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-[#23A68A] hover:bg-emerald-100 font-mono font-bold rounded-lg border border-emerald-200/60 transition"
-                      title="Salin Token"
-                    >
-                      {ex.token}
-                      {copiedToken === ex.token ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5 text-slate-400" />
-                      )}
-                    </button>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-[#23A68A]">
-                      Aktif
-                    </span>
-                  </td>
+          {loading ? (
+            <div className="p-8 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-[#23A68A]" />
+              Memuat data ujian dari database...
+            </div>
+          ) : exams.length === 0 ? (
+            <div className="p-8 text-center text-xs text-slate-400">
+              Belum ada sesi ujian yang dibuat. Silakan buat sesi ujian baru melalui tombol di atas.
+            </div>
+          ) : (
+            <table className="w-full text-left text-xs text-slate-600">
+              <thead className="bg-slate-50 text-slate-400 uppercase font-semibold text-[11px] border-b border-slate-100">
+                <tr>
+                  <th className="px-6 py-3.5">Kode Ujian</th>
+                  <th className="px-6 py-3.5">Judul Sesi</th>
+                  <th className="px-6 py-3.5">Durasi</th>
+                  <th className="px-6 py-3.5">Jumlah Soal</th>
+                  <th className="px-6 py-3.5">Token Ujian</th>
+                  <th className="px-6 py-3.5">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-medium">
+                {exams.map((ex) => (
+                  <tr key={ex.id} className="hover:bg-slate-50/70 transition">
+                    <td className="px-6 py-4 font-mono font-semibold text-slate-800">{ex.code}</td>
+                    <td className="px-6 py-4 text-slate-800 font-semibold">{ex.title}</td>
+                    <td className="px-6 py-4">{ex.durationMinutes} Menit</td>
+                    <td className="px-6 py-4">{ex.totalQuestions} Soal</td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => copyToClipboard(ex.token)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-[#23A68A] hover:bg-emerald-100 font-mono font-bold rounded-lg border border-emerald-200/60 transition"
+                        title="Salin Token"
+                      >
+                        {ex.token}
+                        {copiedToken === ex.token ? (
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5 text-slate-400" />
+                        )}
+                      </button>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                        ex.isActive ? 'bg-emerald-50 text-[#23A68A]' : 'bg-slate-100 text-slate-500'
+                      }`}>
+                        {ex.isActive ? 'Aktif' : 'Nonaktif'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
 

@@ -2,28 +2,16 @@
 ================================================================================
 STATUS: SELESAI DITERAPKAN (APPLIED & SYNCED)
 ENGINE: ZettBOT by Zettbos (System Architect & Mentor)
-TANGGAL: 2026-11-02
+TANGGAL: 2026-11-03
 ================================================================================
 
-## 1. Rincian Fitur Baru yang Telah Diterapkan:
-1. **Tab Baru: Manajemen Data Siswa (`/admin/students`):**
-   - Formulir pendaftaran siswa: Nama Lengkap, NISN (Username login), Kata Sandi, Kelas/Rombel.
-   - Pencarian instan dan tabel daftar siswa.
-   - Fitur Reset Kata Sandi siswa dan Hapus Siswa.
-   - Endpoint API terproteksi: `/api/admin/students`.
+## 1. Rincian Perubahan Terkini:
+1. **Sinkronisasi Dinamis Dashboard Guru (`/admin`):**
+   - Menghilangkan data tiruan/mock statis (128 siswa & 3 ujian).
+   - Menghubungkan kartu metrik ringkasan (Ujian Aktif, Total Peserta, Rata-rata Skor) ke endpoint API real-time `/api/admin/dashboard` yang menghitung langsung dari database Neon PostgreSQL.
+   - Tabel sesi ujian di Dashboard kini menampilkan daftar ujian riil dari database.
 
-2. **Fitur Guru: Edit Skor Siswa Manual & Upload Soal via Excel:**
-   - **Edit Skor Manual:** Guru dapat mengedit skor siswa secara langsung di halaman `/admin/reports` disertai catatan alasan.
-   - **Upload Soal Excel (.xlsx):** Tombol download format template Excel dan import massal butir soal langsung ke Bank Soal.
+2. **Pembersihan Halaman Login (`/login`):**
+   - Menghapus blok catatan bantuan demo (`Demo Admin: ... • Demo Siswa: ...`) di bagian bawah form login untuk keamanan dan kerapihan antarmuka produksi resmi.
 
-3. **Pengaturan Ujian Dinamis (`/admin/exams`):**
-   - Guru dapat mengubah durasi pengerjaan timer, generate token acak baru, dan mengubah status aktif sesi ujian.
-
-4. **Struktur Pembuatan Soal Standar TKA:**
-   - Bagian 1: Stimulus / Wacana Teks (Wacana literasi/numerasi panjang).
-   - Bagian 2: Upload Gambar / Grafik / Kurva (Base64 preview).
-   - Bagian 3: Kalimat Pertanyaan Inti.
-   - Bagian 4: Pilihan Jawaban (Pilihan Ganda 4 opsi, Kompleks Centang non-ABC, Matriks Benar/Salah).
-   - Ditampilkan terstruktur pada lembar ujian siswa (`/student/exam/[id]`).
-
-Seluruh riwayat ini telah dipindahkan secara permanen ke [prd.md](file:///d:/Project/LMS/CBT%20SIMULASI%20UJIAN%20TKA%202/prd.md).
+Riwayat ini telah disinkronkan ke dokumen master [prd.md](file:///d:/Project/LMS/CBT%20SIMULASI%20UJIAN%20TKA%202/prd.md).

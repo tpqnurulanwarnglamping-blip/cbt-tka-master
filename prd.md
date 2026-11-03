@@ -155,6 +155,7 @@ ZONA BAWAH: MASTER CONTEXT & LOGIKA SISTEM TERKINI (LIVING CONTEXT)
   - Server-Validated `expiresAt` dengan LocalStorage backup.
   - Kunci jawaban (`correctAnswer`) tidak pernah dikirim ke frontend klien murid.
 - **Log Pembaruan Resmi:**
+  - v1.3.0: Sinkronisasi 100% dinamis Dashboard Guru dengan database Neon riil (eliminasi data dummy 128 siswa / 3 ujian) dan pembersihan catatan akun demo pada halaman login.
   - v1.2.0: Penambahan Tab Data Siswa (CRUD NISN/Password/Kelas), Edit Skor Manual oleh Guru, Upload Bank Soal via Excel (.xlsx), dan Struktur Soal Baku TKA (Stimulus -> Gambar -> Pertanyaan -> Pilihan).
   - v1.1.0: Integrasi 3 format soal TKA (Pilihan Ganda 4 opsi, Pilihan Ganda Kompleks 3 opsi centang, Benar/Salah 3 pernyataan centang) dan skema penskoran proporsional.
   - v1.0.0: Perumusan arsitektur awal, skema Prisma, dan spesifikasi fitur CBT TKA Vercel-Ready.
